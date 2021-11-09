@@ -1,22 +1,21 @@
 // Require `checkUsernameFree`, `checkUsernameExists` and `checkPasswordLength`
 // middleware functions from `auth-middleware.js`. You will need them here!
 
-const router = require('express').Router();
-const bcrypt = require('bcryptjs');
-const Users = require('../users/users-model');
+const router = require("express").Router();
+const bcrypt = require("bcryptjs");
+const Users = require("../users/users-model");
 
-router.post('/register', async (req, res, next) => {
+router.post("/register", async (req, res, next) => {
   try {
     const { username, password } = req.body;
     const hash = bcrypt.hashSync(password, 6);
     const newUser = { username, password: hash };
-    const user = await Users.add(newUser)
-    res.status(201).json(user);
+    const user = await Users.add(newUser);
+    res.status(200).json(user);
   } catch (err) {
-    next(err)
+    next(err);
   }
-})
-
+});
 
 /**
   1 [POST] /api/auth/register { "username": "sue", "password": "1234" }
@@ -40,9 +39,21 @@ router.post('/register', async (req, res, next) => {
     "message": "Password must be longer than 3 chars"
   }
  */
-router.post('/login', async (req, res, next) => {
-  res.json('login');
-})
+router.post("/login", async (req, res, next) => {
+  try {
+    const { username, password } = req.body;
+    const [user] = await Users.findBy({ username })
+    if(!user) {
+      return next({ status: 401, message: 'Username does not exist'})
+    }
+    const doesPassCheck = bcrypt.compareSync(password, user.password)
+    if(!doesPassCheck) {
+      return next({ status: 401, message: 'Invalid credentials'})
+    }
+  } catch (err) {
+    next(err);
+  }
+});
 
 /**
   2 [POST] /api/auth/login { "username": "sue", "password": "1234" }
@@ -60,9 +71,9 @@ router.post('/login', async (req, res, next) => {
   }
  */
 
-router.get('/', async (req, res, next) => {
-  res.json('logout');
-})
+router.get("/", async (req, res, next) => {
+  res.json("logout");
+});
 
 /**
   3 [GET] /api/auth/logout
@@ -80,6 +91,5 @@ router.get('/', async (req, res, next) => {
   }
  */
 
- 
 // Don't forget to add the router to the `exports` object so it can be required in other modules
 module.exports = router;
