@@ -8,9 +8,10 @@ const Users = require('../users/users-model');
 router.post('/register', async (req, res, next) => {
   try {
     const { username, password } = req.body;
-    const newUser = { username, password };
-    const result = await Users.add(newUser)
-    res.status(201).json(result);
+    const hash = bcrypt.hashSync(password, 6);
+    const newUser = { username, password: hash };
+    const user = await Users.add(newUser)
+    res.status(201).json(user);
   } catch (err) {
     next(err)
   }
